@@ -733,14 +733,17 @@ public class DataSetTransformer {
 	}
 
 	public LinkedHashMap<String, ArrayList<JSONObject>> prepareDataForGrouping(List<Object> dataRows, String isCockpitEngine, String groupSeries,
-			String groupSeriesCateg, Map<String, String> dataColumnsMapper, String groupedSerie) throws JSONException {
+			String groupSeriesCateg, Map<String, String> dataColumnsMapper, Map<String, String> categorieColumns, String groupedSerie) throws JSONException {
 		boolean isCockpit = Boolean.parseBoolean(isCockpitEngine);
 		boolean groupSeriesBool = Boolean.parseBoolean(groupSeries);
 		ArrayList<Object> categories = new ArrayList<>();
 		LinkedHashMap<String, ArrayList<JSONObject>> map = new LinkedHashMap<String, ArrayList<JSONObject>>();
 
-		String columnForGroupingSerie = dataColumnsMapper.get(groupedSerie);
-
+		String columnForGroupingSerie = dataColumnsMapper.get(groupedSerie).toLowerCase();
+		if (!categorieColumns.get("orderColumn").equals("") && !categorieColumns.get("orderColumn").equals(categorieColumns.get("column"))
+				&& !categorieColumns.get("groupby").contains(categorieColumns.get("orderColumn"))) {
+			dataColumnsMapper.remove(categorieColumns.get("orderColumn").toLowerCase());
+		}
 		String primCat;
 		String secCat;
 		String seria;
@@ -750,9 +753,9 @@ public class DataSetTransformer {
 				secCat = "column_2";
 				seria = "column_3";
 			} else {
-				primCat = "column_" + (dataColumnsMapper.size() - 1);
+				primCat = dataColumnsMapper.get(categorieColumns.get("column").toLowerCase());
 				secCat = columnForGroupingSerie;
-				seria = "column_" + dataColumnsMapper.size();
+				seria = dataColumnsMapper.get(categorieColumns.get("groupby").toLowerCase());
 			}
 		} else {
 			if (groupSeriesBool) {
@@ -905,7 +908,7 @@ public class DataSetTransformer {
 				xAxis.put("type", "category");
 				id++;
 			}
-			xAxis.put("name", category.get("name").replaceAll("\\s", ""));
+			xAxis.put("name", category.get("name"));
 			xAxisMap.add(xAxis);
 			for (int i = 0; i < gbys.length; i++) {
 				if (!gbys[i].equals("")) {
@@ -918,7 +921,7 @@ public class DataSetTransformer {
 						xAxis1.put("type", "category");
 						id++;
 					}
-					xAxis1.put("name", gbys[i].replaceAll("\\s", ""));
+					xAxis1.put("name", gbys[i]);
 					xAxisMap.add(xAxis1);
 				}
 

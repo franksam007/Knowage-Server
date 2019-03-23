@@ -53,7 +53,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			//Getting the url parameters
 	  		var url = new URL(window.location.href);
 	  		var datasetLabel = url.searchParams.get("datasetLabel");
-	  		var parameters = JSON.parse(url.searchParams.get("parameters"));
+	  		var parameters = url.searchParams.getAll("parameters");
 	  		var options = JSON.parse(url.searchParams.get("options")) || {};
 	  		if(options && options['exports']) {
 	  			document.getElementById('utility-bar').classList.remove("hidden");
@@ -278,6 +278,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 					if(backEndPagination.sorting) fetchParams.body.sorting = backEndPagination.sorting;
 				}
 				if(!isEmpty(parameters)){
+					for (var i = 0; i < parameters.length; i++) {
+						parameters[i] = JSON.parse(parameters[i]);
+					}
 					fetchParams.body.pars = parameters;
 				}
 				fetchParams.body = JSON.stringify(fetchParams.body);

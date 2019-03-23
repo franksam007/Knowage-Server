@@ -46,7 +46,7 @@
 	#end
 #end
 #foreach($a in $xAxisMap)
-#if($a.name==$drilldownCategoryName.replaceAll(" ",""))
+#if($a.name==$drilldownCategoryName)
 #set($indexAxis = $a.id)
 #end
 #end
@@ -61,11 +61,11 @@
 #set($serieColumnsMapped=$dataColumnsMapper.get($serieWithAgg))
 
 {
-	name:	"$selectedCategory = $escapeTool.javascript($selectedCategory)",
+	name:	"$escapeTool.javascript($selectedCategory)",
 
 	xAxis: $indexAxis,
 	#if($drilldownCategoryName != '')
-	#set ($category=$drilldownCategoryName.replaceAll(" ",""))
+	#set ($category=$drilldownCategoryName)
 	#else
 	#set ($category=$drilldownCategory)
 	#end
@@ -73,7 +73,7 @@
 	#if($indexAxis==1)
 	firstLevelCategory: '$categorieColumns.column',
 	#end
-	serieName:	"$drilldownSerie = $escapeTool.javascript($drilldownSerie)",
+	serieName:	"$escapeTool.javascript($drilldownSerie)",
      pointRange: 1,
      #if($chart.CHART.type.toLowerCase()!='pie')
      "dataLabels": {
@@ -534,34 +534,12 @@
 			#if($serieValue!="")
 				y: $serieValue,
 			#end
-			name:	"$serieName = $escapeTool.javascript($serieName)",
+			name:	"$escapeTool.javascript($serieName)",
 			#if($category == $categoryDate)
-				#if($serieName.length()>10)
-				#set($date = $serieName.replace(" " , "-").replace(":" , "-").replace(":" , "-").replace("." , "-").split("-"))
-				#set($hour= $date.get(3))
-				#set($min= $date.get(4))
-				#set($sec= $date.get(5))
-				#set($milisec= $date.get(6))
-				#else
-				#set($date = $serieName.split("-"))
-				#end
-			
-				#if($date.get(0).length()>2)
-				#set($day = $date.get(2))
-				#set($year= $date.get(0))
-				#else
-				#set($day = $date.get(0))
-				#set($year= $date.get(2))
-				#end
-				#set($month = $Integer.parseInt($date.get(1)))
-				#set($month = $month - 1)
-		
-			#if($serieName.length()>10)
-			x:	Date.UTC($year, $month, $day, $hour, $min, $sec, $milisec),	
-			#else 
-			x:	Date.UTC($year, $month, $day),	
-			
-			#end
+				
+				
+				
+				x: Date.parse("$serieName"),
 			#end
 		
 		},

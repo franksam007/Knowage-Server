@@ -150,7 +150,7 @@ function qbeFunction($scope,$rootScope,$filter,entity_service,query_service,filt
 	$scope.executeQuery = function ( query, bodySend, queryModel, isCompleteResult, start, itemsPerPage) {
 
 		if(query.fields.length>0){
-			return query_service.executeQuery( query, bodySend, queryModel, isCompleteResult, start, itemsPerPage);
+			return query_service.executeQuery( query, bodySend, queryModel, true, start, itemsPerPage);
 		}else{
 			queryModel.length = 0;
 		}
@@ -276,23 +276,15 @@ function qbeFunction($scope,$rootScope,$filter,entity_service,query_service,filt
 		var temp = []
 
 			for (var i = 0; i < data.length; i++) {
-				for(var j =0;j < $scope.editQueryObj.fields.length;j++){
-					if($scope.editQueryObj.fields[j].id === data[i].id){
-						$scope.editQueryObj.fields[j].group = data[i].group;
-						$scope.editQueryObj.fields[j].funct = data[i].funct;
-						$scope.editQueryObj.fields[j].visible = data[i].visible;
-						$scope.editQueryObj.fields[j].distinct = data[i].distinct;
-						$scope.editQueryObj.fields[j].order = data[i].ordering;
-						$scope.editQueryObj.fields[j].alias = data[i].alias;
-						temp.push($scope.editQueryObj.fields[j]);
-					}
-				}
+
+						$scope.editQueryObj.fields[i].group = data[i].group;
+						$scope.editQueryObj.fields[i].funct = data[i].funct;
+						$scope.editQueryObj.fields[i].visible = data[i].visible;
+						$scope.editQueryObj.fields[i].distinct = data[i].distinct;
+						$scope.editQueryObj.fields[i].order = data[i].ordering;
+						$scope.editQueryObj.fields[i].alias = data[i].alias;
 
 			}
-			$scope.editQueryObj.fields = temp;
-
-
-
 
 		if(query_service.smartView){
 			$scope.executeQuery($scope.editQueryObj, $scope.bodySend, $scope.queryModel);
@@ -931,8 +923,8 @@ function qbeFunction($scope,$rootScope,$filter,entity_service,query_service,filt
                 	$scope.calculatedFieldOutput.fieldType = $scope.calculatedFieldOutput.nature.toLowerCase();
                 	$scope.calculatedFieldOutput.entity = $scope.calculatedFieldOutput.alias;
                 	$scope.calculatedFieldOutput.field = $scope.calculatedFieldOutput.alias;
-                	$scope.calculatedFieldOutput.funct = "";
-                	$scope.calculatedFieldOutput.group = false;
+                	$scope.calculatedFieldOutput.funct = $scope.calculatedFieldOutput.nature=="MEASURE" ? "SUM" : "";
+                	$scope.calculatedFieldOutput.group = $scope.calculatedFieldOutput.nature=="ATTRIBUTE" ? true : false;
                 	$scope.calculatedFieldOutput.order = "";
                 	$scope.calculatedFieldOutput.include = true;
                 	$scope.calculatedFieldOutput.visible = true;

@@ -121,6 +121,8 @@ function cockpitSheetControllerFunction($scope,cockpitModule_template,cockpitMod
 			cockpitModule_template.sheets[cur].index ++;
 			cockpitModule_template.sheets[next].index --;
 		}
+		if($scope.initializedSheets.indexOf(cur) != -1) $scope.initializedSheets.splice($scope.initializedSheets.indexOf(cur),1);
+		
 	};
 
 	$scope.renameSheet=function(sheet,ev){

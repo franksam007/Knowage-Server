@@ -161,6 +161,11 @@ if(executionRoleNames.size() > 0) {
         <!-- cross navigation -->
         <script type="text/javascript"  src="<%=urlBuilder.getResourceLink(request, "js/src/angular_1.4/tools/commons/cross-navigation/crossNavigationDirective.js")%>"></script>
         <!--  -->
+        
+        <!-- dataset preview - Birt report -->
+		<script type="text/javascript" src="<%=urlBuilder.getResourceLink(request, "js/src/angular_1.4/tools/documentexecution/birtReportDatasetPreview/datasetPreviewModule.js")%>"></script>
+		<script type="text/javascript" src="<%=urlBuilder.getResourceLink(request, "js/src/angular_1.4/tools/documentexecution/birtReportDatasetPreview/datasetPreview_service.js")%>"></script>
+
         <style type="text/css">
             .requiredField {color: red!important; font-weight: bold;}
             .norequiredField {}
@@ -277,7 +282,7 @@ if(executionRoleNames.size() > 0) {
                                 <md-icon md-font-icon="fa  fa-ellipsis-v"></md-icon>
                             </md-button>
                             <md-menu-content>
-                                <span class="divider">{{translate.load("sbi.ds.wizard.file")}}</span>
+                                <span class="divider" ng-if="canPrintDocuments">{{translate.load("sbi.ds.wizard.file")}}</span>
                                 <md-menu-item class="md-indent" ng-if="canPrintDocuments">
                                     <md-icon class="fa fa-print "></md-icon>
                                     <md-button ng-click="printDocument()">
@@ -447,6 +452,11 @@ if(executionRoleNames.size() > 0) {
                     <iframe class="noBorder" id="documentFrame" name="documentFrame" ng-src="{{execProperties.documentUrl}}" iframe-onload="iframeOnload()"
                         iframe-set-dimensions-onload flex ng-show="urlViewPointService.frameLoaded || browser.name == 'internet explorer'">
                     </iframe>
+                    <md-sidenav class="md-sidenav-right md-whiteframe-4dp lateralsidenav"  id="parametersPanelSideNav-e"
+			                ng-if="'<%=obj.getParametersRegion() %>' == 'east'" md-component-id="parametersPanelSideNav-e" 
+			                layout="column"
+			                ng-include="'<%=urlBuilder.getResourceLink(request, "js/src/angular_1.4/tools/documentexecution/utils/sidenavTemplate/sidenavVertContent.jsp")%>'">
+			        </md-sidenav>
                 </md-content>
                                         
                 <div flex layout ng-if="currentView.status == 'PARAMETERS'"> 
@@ -467,18 +477,14 @@ if(executionRoleNames.size() > 0) {
             </div>
         </div>
         
-        <md-sidenav class="md-sidenav-left md-whiteframe-4dp lateralsidenav"  
-                ng-if="'<%=obj.getParametersRegion() %>' == 'east'" md-component-id="parametersPanelSideNav" 
-                layout="column" md-is-locked-open="showParametersPanel.status" 
-                ng-include="'<%=urlBuilder.getResourceLink(request, "js/src/angular_1.4/tools/documentexecution/utils/sidenavTemplate/sidenavVertContent.jsp")%>'">
-        </md-sidenav>
+        
 
         <script type="text/javascript">
         ///Module creation
         (function() {
             
             angular.module('documentExecutionModule', 
-                    ['ngMaterial', 'ui.tree', 'sbiModule', 'document_tree', 'componentTreeModule', 'angular_table', 'ngSanitize', 'expander-box', 'ngAnimate', 'ngWYSIWYG','angular_list','cross_navigation','file_upload','driversExecutionModule']);
+                    ['ngMaterial', 'ui.tree', 'sbiModule', 'document_tree', 'componentTreeModule', 'angular_table', 'ngSanitize', 'expander-box', 'ngAnimate', 'ngWYSIWYG','angular_list','cross_navigation','file_upload','driversExecutionModule', 'datasetPreviewModule']);
             
             
             

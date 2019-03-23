@@ -85,7 +85,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		$scope.aggregationsRegex = /(?:\[kn-column=[\']{1}([a-zA-Z0-9\_\-]+)[\']{1}(?:\s+aggregation=[\']{1}(AVG|MIN|MAX|SUM|COUNT_DISTINCT|COUNT|DISTINCT COUNT)[\']{1}){1}(?:\s+precision=\'(\d)\')?(\s+format)?\])/g;
 		$scope.aggregationRegex = /(?:\[kn-column=[\']{1}([a-zA-Z0-9\_\-]+)[\']{1}(?:\s+aggregation=[\']{1}(AVG|MIN|MAX|SUM|COUNT_DISTINCT|COUNT|DISTINCT COUNT)[\']{1}){1}(?:\s+precision=\'(\d)\')?(\s+format)?\])/;
 		$scope.paramsRegex = /(?:\[kn-parameter=[\'\"]{1}([a-zA-Z0-9\_\-]+)[\'\"]{1}\])/g;
-		$scope.calcRegex = /(?:\[kn-calc=\(([\[\]\w\s\-\=\>\<\"\'\!\+\*\/\%\&\,\.\|]*)\)(?:\s+precision=\'(\d)\')?(\s+format)?\])/g;
+		$scope.calcRegex = /(?:\[kn-calc=\(([\[\]\w\s\-\=\>\<\"\'\!\+\*\/\%\&\,\.\|]*)\)(?:\s+min=\'(\d*)\')?(?:\s+max=\'(\d*)\')?(?:\s+precision=\'(\d)\')?(\s+format)?\])/g;
 		$scope.repeatIndexRegex = /\[kn-repeat-index\]/g;
 		$scope.gt = /(\<.*kn-.*=["].*)(>)(.*["].*\>)/g;
 		$scope.lt = /(\<.*kn-.*=["].*)(<)(.*["].*\>)/g;
@@ -123,6 +123,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			if(datasetRecords) $scope.htmlDataset = datasetRecords;
 			$scope.manageHtml();
 			$scope.hideWidgetSpinner();
+			if(nature == 'init'){
+				$timeout(function(){
+					$scope.widgetIsInit=true;
+					cockpitModule_properties.INITIALIZED_WIDGETS.push($scope.ngModel.id);
+				},500);
+			}
 		}
 		
 		$scope.init=function(element,width,height){
@@ -357,7 +363,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		$scope.checkParamsPlaceholders = function(rawHtml){
 			return $q(function(resolve, reject) {
 				var resultHtml = rawHtml.replace($scope.paramsRegex, function(match, p1) {
-					p1=cockpitModule_analyticalDrivers[p1];
+					p1 = cockpitModule_analyticalDrivers[p1] || null;
 					return p1;
 				});
 				resolve(resultHtml);
@@ -365,48 +371,51 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		}
 		
 		//Replacers
-		$scope.calcReplacer = function(match,p1,precision,format){
-			if(format) return precision ? parseFloat(eval(p1)).toFixed(precision).toLocaleString() : parseFloat(eval(p1)).toLocaleString();
-			return (precision && !isNaN(eval(p1)))? parseFloat(eval(p1)).toFixed(precision) : eval(p1);
+		$scope.calcReplacer = function(match,p1,min,max,precision,format){
+			var result = eval(p1);
+			if(min && result < min) result = min;
+			if(max && result > max) result = max;
+			if(format) return precision ? $filter('number')(result, precision) : $filter('number')(result);
+			return (precision && !isNaN(result))? parseFloat(result).toFixed(precision) : result;
 		}
 		
 		$scope.ifConditionReplacer = function(match, p1, p2, aggr, precision){
 			var columnInfo;
 			if(aggr){
 				columnInfo = $scope.getColumnFromName(p1,$scope.aggregationDataset,aggr);
-				p1 = $scope.aggregationDataset && $scope.aggregationDataset.rows[0] && typeof($scope.aggregationDataset.rows[0][columnInfo.name])!='undefined' ? $scope.aggregationDataset.rows[0][columnInfo.name] : 'null';
+				p1 = $scope.aggregationDataset && $scope.aggregationDataset.rows[0] && typeof($scope.aggregationDataset.rows[0][columnInfo.name])!='undefined' ? $scope.aggregationDataset.rows[0][columnInfo.name] : null;
 			}
 			else if($scope.htmlDataset.rows[p2||0] && $scope.htmlDataset.rows[p2||0][$scope.getColumnFromName(p1,$scope.htmlDataset).name]){
 				columnInfo = $scope.getColumnFromName(p1,$scope.htmlDataset);
 				p1 = columnInfo.type == 'string' ? '\''+$scope.htmlDataset.rows[p2||0][columnInfo.name]+'\'' : $scope.htmlDataset.rows[p2||0][columnInfo.name];
 			}else {
-				p1 = 'null';
+				p1 = null;
 			}
 			return (precision && !isNaN(p1))? parseFloat(p1).toFixed(precision) : p1;
 		}
 		
 		$scope.ifConditionParamsReplacer = function(match, p1){
-			return typeof(cockpitModule_analyticalDrivers[p1]) == 'string' ? '\''+cockpitModule_analyticalDrivers[p1]+'\'' : cockpitModule_analyticalDrivers[p1];
+			return typeof(cockpitModule_analyticalDrivers[p1]) == 'string' ? '\''+cockpitModule_analyticalDrivers[p1]+'\'' : (cockpitModule_analyticalDrivers[p1] || null);
 		}
 		
 		$scope.replacer = function(match, p1, p2, p3, precision,format) {
 			var columnInfo;
 			if(p3){
 				columnInfo = $scope.getColumnFromName(p1,$scope.aggregationDataset,p3);
-				p1=$scope.aggregationDataset && $scope.aggregationDataset.rows[0] && typeof($scope.aggregationDataset.rows[0][columnInfo.name])!='undefined' ? $scope.aggregationDataset.rows[0][columnInfo.name] : 'null';
+				p1=$scope.aggregationDataset && $scope.aggregationDataset.rows[0] && typeof($scope.aggregationDataset.rows[0][columnInfo.name])!='undefined' ? $scope.aggregationDataset.rows[0][columnInfo.name] : null;
 			}else{
 				columnInfo = $scope.getColumnFromName(p1,$scope.htmlDataset);
-				p1=$scope.htmlDataset && $scope.htmlDataset.rows[p2||0] && typeof($scope.htmlDataset.rows[p2||0][columnInfo.name])!='undefined' ? $scope.htmlDataset.rows[p2||0][columnInfo.name] : 'null';
+				p1=$scope.htmlDataset && $scope.htmlDataset.rows[p2||0] && typeof($scope.htmlDataset.rows[p2||0][columnInfo.name])!='undefined' ? $scope.htmlDataset.rows[p2||0][columnInfo.name] : null;
 			}
-			if(p1 != 'null' && columnInfo.type == 'int' || columnInfo.type == 'float'){
-				if(format) p1 = precision ? parseFloat(p1).toFixed(precision).toLocaleString() : parseFloat(p1).toLocaleString();
+			if(p1 != null && columnInfo.type == 'int' || columnInfo.type == 'float'){
+				if(format) p1 = precision ? $filter('number')(p1, precision) : $filter('number')(p1);
 				else p1 = precision ? parseFloat(p1).toFixed(precision) : parseFloat(p1);
 			}
 			return p1;
 			
 		}
 		$scope.paramsReplacer = function(match, p1){
-			p1=cockpitModule_analyticalDrivers[p1];
+			p1 = cockpitModule_analyticalDrivers[p1] || null;
 			return p1;
 		}
 		

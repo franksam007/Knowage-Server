@@ -239,8 +239,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 		$scope.selectRow=function(row,column,evt){
 			cockpitModule_widgetSelection.setWidgetOfType("table");
+			
 			var newValue = undefined;
-
+			
+			// Dataset preview
+			if ($scope.ngModel.cross && $scope.ngModel.cross.preview && $scope.ngModel.cross.preview.enable) {
+				switch ($scope.ngModel.cross.preview.previewType) {
+				case 'allRow':
+					previewDataset(row, column);
+					break;
+				case 'singleColumn':
+					if (column.aliasToShow == $scope.ngModel.cross.preview.column)
+						previewDataset(row, column);
+					break;
+				case 'icon':
+					previewDataset(row, column);
+					break;
+				}
+				return;				
+			}
+			
 			for(var i=0;i<$scope.ngModel.content.columnSelectedOfDataset.length;i++){
 				if($scope.ngModel.settings.modalSelectionColumn!=undefined)	{
 					if($scope.ngModel.content.columnSelectedOfDataset[i].aliasToShow==$scope.ngModel.settings.modalSelectionColumn)	{
@@ -274,6 +292,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			}else{
 				$scope.doSelection(column.aliasToShow, row[column.aliasToShow], $scope.ngModel.settings.modalSelectionColumn, newValue, row);
 			}
+		}
+		
+		var previewDataset = function(row, column) {
+			if ($scope.ngModel.cross.preview.parameters && 
+				    (angular.isArray($scope.ngModel.cross.preview.parameters) && $scope.ngModel.cross.preview.parameters.length > 0)) {
+				newValue = $scope.ngModel.cross.preview.parameters;
+				$scope.doSelection(column.aliasToShow, row[column.aliasToShow], newValue, undefined, row);
+			} else if ($scope.ngModel.cross.preview.column && $scope.ngModel.cross.preview.column != "") {
+				// if modal column is selected
+				newValue = row[$scope.ngModel.cross.preview.column];
+				$scope.doSelection(column.aliasToShow, row[column.aliasToShow], $scope.ngModel.cross.preview.column, newValue, row);
+			} else {
+				// previewing common Dataset, without parameters
+				$scope.doSelection(column.aliasToShow, row[column.aliasToShow], undefined, undefined, row);
+			}	
 		}
 
 		$scope.calculatedRow = function(row,column,alias){
@@ -447,6 +480,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 			if($scope.datasetRecords){
 				$scope.ngModel.settings.backendTotalRows = $scope.datasetRecords.results;
+			}
+			if(nature == 'init'){
+				$timeout(function(){
+					$scope.widgetIsInit=true;
+					cockpitModule_properties.INITIALIZED_WIDGETS.push($scope.ngModel.id);
+				},500);
 			}
 		}
 
@@ -652,9 +691,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 		$scope.init=function(element,width,height){
 			$scope.refreshWidget(null, 'init');
-			$timeout(function(){
-				$scope.widgetIsInit=true;
-			},500);
 
 		}
 

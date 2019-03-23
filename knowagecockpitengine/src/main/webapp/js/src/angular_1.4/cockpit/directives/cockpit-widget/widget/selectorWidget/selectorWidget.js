@@ -184,9 +184,6 @@ angular.module('cockpitModule')
 
 		$scope.init=function(element,width,height){
 			$scope.refreshWidget(null, 'init');
-			$timeout(function(){
-				$scope.widgetIsInit=true;
-			},500);
 
 		}
 
@@ -243,6 +240,12 @@ angular.module('cockpitModule')
 				}, 0);
 			}
 			
+			if(nature == 'init'){
+				$timeout(function(){
+					$scope.widgetIsInit=true;
+					cockpitModule_properties.INITIALIZED_WIDGETS.push($scope.ngModel.id);
+				},500);
+			}
 		}
 		
         $scope.mobilecheck = function() {
@@ -259,14 +262,22 @@ angular.module('cockpitModule')
         		parent: angular.element(document.body),
         		targetEvent: ev,
         		clickOutsideToClose:true,
-        		locals: {selectables:$scope.ngModel.activeValues, itemsList:$scope.datasetRecords.rows, activeSelections: $scope.selectedValues, targetModel: $scope.ngModel.content, settings:$scope.ngModel.settings}
+        		locals: {
+        			selectables:$scope.ngModel.activeValues, 
+        			itemsList:$scope.datasetRecords.rows, 
+        			activeSelections: $scope.selectedValues, 
+        			targetModel: $scope.ngModel.content, 
+        			settings:$scope.ngModel.settings,
+        			title:($scope.ngModel.style.title && $scope.ngModel.style.title.label) ? $scope.ngModel.style.title.label : $scope.ngModel.content.name
+        		}
 	  		}).then(function(selectedFields) {
 	  			$scope.toggleParameter(selectedFields);
 	  			},function(error){});
         	}
         	
-    	function MultiSelectDialogController(scope, $mdDialog, sbiModule_translate, targetModel, selectables, activeSelections, itemsList, settings) {
+    	function MultiSelectDialogController(scope, $mdDialog, sbiModule_translate, targetModel, selectables, activeSelections, itemsList, settings, title) {
     		scope.settings = settings;
+    		scope.title = title;
     		scope.translate = sbiModule_translate;
         	scope.selectables = [];
         	scope.allSelected = false;
@@ -372,7 +383,7 @@ angular.module('cockpitModule')
 		};
 
 		$scope.toggleParameter = function(parVal) {
-			if($scope.ngModel.settings.modalityPresent=="COMBOBOX"){
+			if($scope.ngModel.settings.modalityPresent=="COMBOBOX" && $scope.ngModel.settings.modalityValue!='multiValue'){
 				if(angular.equals(parVal, $scope.oldSelectedValues)){
 					return;
 				}

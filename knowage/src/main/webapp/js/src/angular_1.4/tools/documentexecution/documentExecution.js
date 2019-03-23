@@ -16,15 +16,15 @@
 			['$scope', '$http', '$mdSidenav', '$mdDialog', '$mdToast', 'sbiModule_translate', 'sbiModule_restServices', 'sbiModule_user',
 			 'sbiModule_config', 'sbiModule_messaging', 'execProperties', 'documentExecuteFactories', 'sbiModule_helpOnLine',
 			 'documentExecuteServices', 'docExecute_urlViewPointService', 'docExecute_paramRolePanelService', 'infoMetadataService', 'sbiModule_download', '$crossNavigationScope',
-			 '$timeout', '$interval', 'docExecute_exportService', '$filter', 'sbiModule_dateServices', 'cockpitEditing', '$window','$mdMenu','sbiModule_i18n','sbiModule_device',
-			 'driversExecutionService','driversDependencyService',documentExecutionControllerFn]);
+			 '$timeout', '$interval', 'docExecute_exportService', '$filter', 'sbiModule_dateServices', 'cockpitEditing', '$window', '$httpParamSerializer', '$mdMenu','sbiModule_i18n','sbiModule_device',
+			 'driversExecutionService','driversDependencyService', 'datasetPreview_service' ,documentExecutionControllerFn]);
 
 	function documentExecutionControllerFn(
 			$scope, $http, $mdSidenav, $mdDialog,$mdToast, sbiModule_translate, sbiModule_restServices,sbiModule_user, sbiModule_config,
 			sbiModule_messaging, execProperties, documentExecuteFactories, sbiModule_helpOnLine, documentExecuteServices,
 			docExecute_urlViewPointService, docExecute_paramRolePanelService, infoMetadataService, sbiModule_download, $crossNavigationScope,
 			$timeout, $interval, docExecute_exportService, $filter, sbiModule_dateServices,
-			cockpitEditing,$window,$mdMenu,sbiModule_i18n,sbiModule_device,driversExecutionService,driversDependencyService) {
+			cockpitEditing, $window, $httpParamSerializer, $mdMenu,sbiModule_i18n, sbiModule_device,driversExecutionService,driversDependencyService, datasetPreview_service) {
 
 		console.log("documentExecutionControllerFn IN ");
 
@@ -348,7 +348,7 @@
 
 			var parametersO = driversExecutionService.buildStringParameters(execProperties.parametersData.documentParameters);
 			//var parameters = encodeURIComponent(JSON.stringify(parametersO)).replace(/'/g,"%27").replace(/"/g,"%22").replace(/%3D/g,"=").replace(/%26/g,"&");
-			var parameters = $scope.urlEncode(parametersO);
+			var parameters = $httpParamSerializer(parametersO);
 
 			var passToService = {};
 			passToService.label = label;
@@ -382,7 +382,7 @@
 				+ "&ORGANIZATION="+tenant;
 
 				if(parameters != undefined && parameters != ''){
-					url += "&PARAMETERS="+parameters;
+					url += "&PARAMETERS=" + encodeURIComponent(parameters);
 				}
 
 				var urlToSend;
@@ -655,7 +655,11 @@
             }
             return false;
 		};
-
+		
+		$scope.previewDataset = function(datasetLabel, parameters) {
+			datasetPreview_service.previewDataset(datasetLabel, parameters);
+		}
+		
 		$scope.navigateTo= function(outputParameters,inputParameters,targetCrossNavigation,docLabel, otherOutputParameters){
 			$crossNavigationScope.crossNavigationHelper.navigateTo(outputParameters,execProperties.parametersData.documentParameters,targetCrossNavigation,docLabel,otherOutputParameters);
 //			$crossNavigationScope.crossNavigationHelper.navigateTo(outputParameters,inputParameters,targetCrossNavigation,docLabel);
@@ -734,6 +738,17 @@ var execExternalCrossNavigation=function(outputParameters,inputParameters,target
 	}
 	parent.navigateTo(outputParameters,inputParameters,targetCrossNavigation,docLabel,otherOutputParameters);
 };
+
+var execPreviewDataset = function(datasetLabel, parameters) {
+	var parent = angular.element(frameElement).scope().$parent;
+	while(parent != undefined){
+		if(parent.previewDataset != undefined){
+			break;
+		}
+		parent = parent.$parent;
+	}
+	parent.previewDataset(datasetLabel, parameters);
+}
 
 var execShowHelpOnLine=function(data){
 	var parent = angular.element(frameElement).scope().$parent;

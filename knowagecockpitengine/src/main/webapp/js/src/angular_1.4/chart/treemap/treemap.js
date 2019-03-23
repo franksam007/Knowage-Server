@@ -1195,7 +1195,8 @@ function prepareChartConfForHeatmap(chartConf,handleCockpitSelection,handleCross
 			stops:colorStops ,
             min: minValue,
             max: maxValue,
-
+		    startOnTick: false,
+		    endOnTick: false,
             labels:
             {
                format: '{value}'

@@ -134,7 +134,7 @@ angular.module('cockpitModule')
 		return sbiModule_i18n.getI18n(label);
 	}
 })
-.directive('cockpitWidget',function(cockpitModule_widgetConfigurator,cockpitModule_widgetServices,$compile,cockpitModule_widgetSelection,$rootScope,cockpitModule_datasetServices, cockpitModule_properties, cockpitModule_exportWidgetService){
+.directive('cockpitWidget',function(cockpitModule_widgetConfigurator,cockpitModule_widgetServices,$compile,cockpitModule_widgetSelection,$rootScope,cockpitModule_datasetServices, cockpitModule_properties, cockpitModule_exportWidgetService, $httpParamSerializer){
 	   return{
 		   templateUrl: baseScriptPath+ '/directives/cockpit-widget/templates/cockpitWidget.html',
 		   controller: cockpitWidgetControllerFunction,
@@ -247,10 +247,15 @@ function cockpitWidgetControllerFunction(
 		$filter,
 		$sce,
 		$mdDialog,cockpitModule_backwardCompatibility,
-		cockpitModule_exportWidgetService)
+		cockpitModule_exportWidgetService,
+		$httpParamSerializer)
 
 	{
 
+	var SERVICE = "/restful-services/2.0/datasets/preview";
+	
+	$scope.cockpitModule_properties = cockpitModule_properties;
+	
 	$scope.openMenu = function($mdMenu, ev) {
 	      $mdMenu.open(ev);
 	    };
@@ -648,17 +653,77 @@ function cockpitWidgetControllerFunction(
 		}
 		$scope.$broadcast("drillClick",{ "drillable": $scope.ngModel.drillable, "cliccable": $scope.ngModel.cliccable});
 	}
+	
+	$scope.checkPreviewParameters = function(previewDataset, columnName, modalColumn, row){
+		if (modalColumn == undefined || modalColumn == "") {
+			var parameters = cockpitModule_datasetServices.getDatasetParameters(previewDataset.id.dsId);
+			var parametersString = cockpitModule_datasetServices.getParametersAsString(parameters);
+			modalColumn = angular.fromJson(parametersString);
+		}
+		for (var i = 0; i < previewDataset.parameters.length; i++) {
+			if (angular.isArray(modalColumn)) {
+				var value = row[modalColumn[i].column];
+				previewDataset.parameters[i].value = value;
+			} else if (angular.isObject(modalColumn)) {
+				previewDataset.parameters[i].value = modalColumn[previewDataset.parameters[i].name];
+			} else {
+				previewDataset.parameters[i].value = row[modalColumn];
+			}
+		}
+		return previewDataset.parameters;
+	}
+	
 	$scope.doSelection = function(columnName, columnValue, modalColumn, modalValue, row, skipRefresh, dsId, disableAssociativeLogic){
 		if($scope.ngModel.cliccable==false){
 			console.log("widget is not cliccable")
 			return;
 		}
-
-		// check if cross navigation was enable don this widget
+		
+		var dataset = dsId != undefined ? cockpitModule_datasetServices.getDatasetById(dsId) : $scope.getDataset();
+		
 		var model = $scope.ngModel;
-		if(model.cross != undefined  && model.cross.cross != undefined
-				&& model.cross.cross.enable === true
-				){
+		
+		var previewSettings;
+		
+		if($scope.ngModel.cross && $scope.ngModel.cross.preview) previewSettings = angular.copy($scope.ngModel.cross.preview);
+		if($scope.ngModel.content && $scope.ngModel.content.preview) previewSettings = angular.copy($scope.ngModel.content.preview);
+		
+		if (previewSettings && previewSettings.enable) {
+				
+				$scope.iframeSrcUrl = sbiModule_config.host + sbiModule_config.externalBasePath + SERVICE;
+				
+				var previewDataset = cockpitModule_datasetServices.getDatasetById(previewSettings.dataset);
+												
+				var config = {
+					datasetLabel: previewDataset.label
+				};
+				
+				if (previewDataset.parameters && previewDataset.parameters.length > 0)
+					config.parameters = $scope.checkPreviewParameters(previewDataset, columnName, modalColumn, row);
+				
+				//showing exporters
+				config.options = {
+						exports: ['CSV', 'XLSX']
+				};
+				
+				$scope.iframeSrcUrl += '?' + $httpParamSerializer(config);
+							
+					$mdDialog.show({
+						parent: angular.element(document.body),
+						templateUrl: currentScriptPath + '/widget/htmlWidget/templates/htmlWidgetPreviewDialogTemplate.html',
+						controller: function(scope) {
+							scope.previewUrl = $scope.iframeSrcUrl;
+							
+							scope.closePreview = function() {
+								$mdDialog.hide();
+							}
+						},
+						clickOutsideToClose: true
+					}).then(function(response){}, function(response){});
+				return;
+					
+
+		}else if(model.cross != undefined  && model.cross.cross != undefined && model.cross.cross.enable === true){
 
 			// enter cross navigation mode
 			var doCross = false;
@@ -676,7 +741,7 @@ function cockpitWidgetControllerFunction(
 				}
 			}
 
-			if(model.cross.cross.allRow == true){
+			if(model.cross.cross.crossType == "allRow" || model.cross.cross.crossType == "icon"){
 				// case all columns are enabled for cross, get value for cross
 				// column (or alias if present)
 				var crossColumnOrAlias = model.cross.cross.column;
@@ -736,12 +801,6 @@ function cockpitWidgetControllerFunction(
 
 					if(content.enabled == true){
 
-						/*if(content.dataType == 'date' && content.value != undefined && content.value != ''){
-
-							content.value = content.value.toLocaleDateString('en-US');
-							content.value+= "#MM/dd/yyyy";
-						}*/
-
 						if(content.type == 'static'){
 							var objToAdd = {};
 							objToAdd[par] = content.value;
@@ -774,47 +833,6 @@ function cockpitWidgetControllerFunction(
 					}
 				}
 
-
-
-
-
-				// parse static parameters if present
-				/*var staticParameters = [];
-				if(model.cross.cross.staticParameters && model.cross.cross.staticParameters != ""){
-					var err=false;
-					try{
-						var parsedStaticPars = model.cross.cross.staticParameters.split("&");
-						for(var i=0;i<parsedStaticPars.length;i++){
-							var splittedPar=parsedStaticPars[i].split("=");
-							if(splittedPar[0]==undefined || splittedPar[1]==undefined){err=true;}
-							else{
-								var toInsert = {};
-								toInsert[splittedPar[0]] = splittedPar[1];
-								staticParameters.push(toInsert);
-							}
-
-						}
-
-					}catch(e){
-						err=true
-						console.error(e);
-					}finally{
-						if(err){
-							 $mdDialog.show(
-								      $mdDialog.alert()
-								        .clickOutsideToClose(true)
-								        .title(sbiModule_translate.load("sbi.cockpit.cross.staticParameterErrorFormatTitle"))
-								        .content(sbiModule_translate.load("sbi.cockpit.cross.staticParameterErrorFormatMsg"))
-								        //.ariaLabel('Alert Dialog Demo')
-								        .ok(sbiModule_translate.load("sbi.general.continue"))
-								    );
-								return;
-						}
-
-						}
-
-				}*/
-
 				// if destination document is specified don't ask
 				if(model.cross.cross.crossName != undefined){
 					parent.execExternalCrossNavigation(outputParameter,{},model.cross.cross.crossName,null,otherOutputParameters);
@@ -825,8 +843,6 @@ function cockpitWidgetControllerFunction(
 				return;
 			}
 		}
-
-		var dataset = dsId != undefined ? cockpitModule_datasetServices.getDatasetById(dsId) : $scope.getDataset();
 
 		if(dataset && columnName){
 
@@ -979,7 +995,7 @@ function cockpitWidgetControllerFunction(
 
 		}
 	}
-
+	
 	$scope.doEditWidget=function(initOnFinish){
 
 		var deferred;

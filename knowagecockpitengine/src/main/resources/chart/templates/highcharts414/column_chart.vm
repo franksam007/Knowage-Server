@@ -3,7 +3,9 @@
 #foreach ($dataField in $dataFields) ## conversion column name to internal column name
 	#if($dataField.class.name == 'java.util.LinkedHashMap')
 		#set($dataFieldHeader = $datasettransformer.setGroupingFunctionToLowerCase($dataField.header))
+		#if(!$dataColumnsMapper.get($dataFieldHeader.toLowerCase()))
     	#set($workAroundNoPrint = $dataColumnsMapper.put($dataFieldHeader.toLowerCase() , $dataField.name))
+    	#end
 	#end
 #end
 #set($rows = $data.rows) ## data in table rows
@@ -77,7 +79,7 @@
 #if($chart.groupedSerie)
 #set($groupedSerie = $chart.groupedSerie)
 #else
-#set($groupedSerie = $series.get(0).name)
+#set($groupedSerie = $series.get(0).column)
 #end
 #end
 #if($series.class.name == 'java.util.LinkedHashMap')
@@ -91,9 +93,9 @@
 		
 		#set($serieKeyFeed = $serieKeyFeed + 1)
 		
-		#if($serie.name == $groupedSerie)
+		#if($serie.column == $groupedSerie)
 		
-		#set($groupedSerie = "$serie.name"+"_"+"$serie.groupingFunction.toLowerCase()")
+		#set($groupedSerie = "$serie.name.toLowerCase()"+"_"+"$serie.groupingFunction.toLowerCase()")
 		
 		#end
 		
@@ -1039,7 +1041,8 @@
 				#end
 			#set($enableValues = $chart.VALUES.SERIE.get(0).showValue)
 			#end
-		#set($map = $datasettransformer.prepareDataForGrouping($rows,$chart.isCockpitEngine, $chart.groupSeries, $chart.groupSeriesCateg, $dataColumnsMapper,$groupedSerie))
+
+		#set($map = $datasettransformer.prepareDataForGrouping($rows,$chart.isCockpitEngine, $chart.groupSeries, $chart.groupSeriesCateg, $dataColumnsMapper, $categorieColumns, $groupedSerie))
      
 		#end
 
@@ -1425,7 +1428,7 @@
 	    	dataLabels: {
 	    		allowOverlap: true,
 	    	},
-	    	#set ($counterX = 0)
+	    	#set ($countXvalues = 0)
 	    	
 	    	data: [
 	    		#set($relatedSerieColName = "$relatedSerie.name"+"_#if($relatedSerie.groupingFunction)$relatedSerie.groupingFunction.toLowerCase()#{else}sum#end")
@@ -2306,21 +2309,21 @@
 	    	 	 
 	        },
         series: {
-        
+        #if($chart.LEGEND.showCheckboxes && $chart.LEGEND.showCheckboxes==true )
         	events: {
-        	checkboxClick: function(event) {
-        	this.points.forEach(function(point) {
-        	point.update({
-        	dataLabels: {
-        	enabled: event.checked
-        	}
-        	});
-        	});
-        	}
+	        	checkboxClick: function(event) {
+		        	this.points.forEach(function(point) {
+			        	point.update({
+				        	dataLabels: {
+				        		enabled: event.checked
+				        	}
+			        	});
+		        	});
+	        	}
         	},
-        	  
+        	
 			showCheckbox: true,
-        
+        	#end
             cursor: 'pointer', 
             #if(!$exportWebApp)
             point: {

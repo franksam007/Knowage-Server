@@ -46,6 +46,7 @@ angular.module("cockpitModule").factory("cockpitModule_properties",function(){
 		STARTING_FILTERS:[],
 		CURRENT_SHEET: <%=initialSheet%>,
 		EXPORT_MODE: <%=exportMode%>,
+		INITIALIZED_WIDGETS : [],
 		CURRENT_KNOWAGE_VERSION: "<%=it.eng.knowage.wapp.VersionInfo.COMPLETE_VERSION%>"
 	}
 });
@@ -102,7 +103,7 @@ angular.module("cockpitModule").factory("cockpitModule_template",function(sbiMod
 
     var cockpitSelections = JSON.parse('<%=initialSelections%>');
 	if(cockpitSelections.aggregations && cockpitSelections.aggregations.length > 0) {
-	    template.configuration.aggregations = cockpitSelections.aggregations;
+	    angular.merge(template.configuration.aggregations, cockpitSelections.aggregations);
 	}
 	if(cockpitSelections.filters && !angular.equals(cockpitSelections.filters, {})) {
     	template.configuration.filters = cockpitSelections.filters;
@@ -203,10 +204,6 @@ angular.module("cockpitModule").factory("cockpitModule_analyticalDriversUrls",fu
 var chartLibNamesConfig = <%=ChartEngineUtil.getChartLibNamesConfig()%>;
 
 </script>
-<%-- <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/themes/commons/css/customStyle.css"> --%>
-<%-- <link rel="stylesheet" type="text/css" href="${request.contextPath}/themes/commons/css/customStyle.css"> --%>
-<!-- <link rel="stylesheet" type="text/css" href="/knowage/themes/commons/css/customStyle.css"> -->
-<link rel="stylesheet" type="text/css" href="<%= GeneralUtilities.getSpagoBiContext() %>/themes/commons/css/customStyle.css">
 
 <title>Cockpit engine</title>
 </head> 

@@ -27,6 +27,8 @@ angular.module('cockpitModule').directive('datasetSelector',function($compile){
 			   extended:"=?",
 			   datasetSettings:"=?",
 			   onChange:"&",
+			   isDisabled:"=?",
+			   noParameters: "=?",
 			   datasetTypeAvailable:"=?",
 			   datasetTypeExclusion:"=?"
 		   },
@@ -50,7 +52,7 @@ function datasetSelectorControllerFunction($scope,cockpitModule_datasetServices,
 	$scope.availableDatasets=cockpitModule_datasetServices.getAvaiableDatasets();
 
 	$scope.addNewDataset=function(){
-		 cockpitModule_datasetServices.addDataset(undefined,$scope.availableDatasets,false,true)
+		 cockpitModule_datasetServices.addDataset(undefined,$scope.availableDatasets,false,true, null, null, $scope.noParameters || false )
 		 .then(function(data){
 			 $scope.availableDatasets=cockpitModule_datasetServices.getAvaiableDatasets();
 			 $scope.ngModel=data.id.dsId;

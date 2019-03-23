@@ -249,6 +249,8 @@ function cockpitChartWidgetControllerFunction(
 		if ($scope.ngModel.dataset){
 			var dataset = cockpitModule_datasetServices.getDatasetById($scope.ngModel.dataset.dsId);
 			var aggregations = cockpitModule_widgetSelection.getAggregation($scope.ngModel,dataset);
+			$scope.ngModel.dataset.label = $scope.ngModel.dataset.dsLabel;
+			var filtersParams = cockpitModule_datasetServices.getWidgetSelectionsAndFilters($scope.ngModel,$scope.ngModel.dataset, false);
 
 			var filtersParams = cockpitModule_datasetServices.getWidgetSelectionsAndFilters($scope.ngModel,$scope.ngModel.dataset, false);
 
@@ -292,6 +294,12 @@ function cockpitChartWidgetControllerFunction(
 					$scope.$broadcast(nature,data, false, changedChartType,dataAndChartConf,objForDrill);
 				},400)
 
+			}
+			if(nature == 'init'){
+				$timeout(function(){
+					$scope.widgetIsInit=true;
+					cockpitModule_properties.INITIALIZED_WIDGETS.push($scope.ngModel.id);
+				},500);
 			}
 		}
 

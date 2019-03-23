@@ -88,8 +88,10 @@ public class SbiNewsReadDAOImpl extends AbstractHibernateDAO implements ISbiNews
 			session = getSession();
 			transaction = session.beginTransaction();
 
-			String hql = "Select newsId from SbiNewsRead s WHERE s.user = :user";
+			String hql = "select s.newsId from SbiNewsRead s WHERE s.user = :user AND s.newsId in (select news.id from SbiNews news "
+					+ "where news.active = true and news.expirationDate >= current_date)";
 			Query query = session.createQuery(hql);
+
 			query.setString("user", String.valueOf(profile.getUserId()));
 			listOfReads = query.list();
 

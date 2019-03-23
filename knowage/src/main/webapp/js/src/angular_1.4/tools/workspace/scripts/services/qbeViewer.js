@@ -179,12 +179,15 @@ angular
 						attachTo:  angular.element(document.body),
 						templateUrl: sbiModule_config.contextName +'/js/src/angular_1.4/tools/workspace/templates/saveQbeDatasetTemplate.html',
 						position: $mdPanel.newPanelPosition().absolute().center(),
+						panelClass:"layout-column",
 						fullscreen: true,
 						controller: function($scope, selectedDataSet, mdPanelRef, closeDocumentFn, savedFromQbe, sbiModule_messaging, sbiModule_translate, datasetSave_service, datasetScheduler_service){
-
+							$scope.model = {selectedDataSet: selectedDataSet, "mdPanelRef": mdPanelRef};
 
 							$scope.closePanel = function(){
-								mdPanelRef.close();
+								mdPanelRef.close().then(function(panelRef) {
+								    panelRef.destroy();
+								  });;
 							}
 
 							$scope.saveDataSet = function() {
@@ -285,7 +288,25 @@ angular
 				$scope.showDrivers = !$scope.showDrivers;
 			}
 
-			$scope.closeDocument = function() {
+			var onClosing = function(){
+				console.info("[RELOAD]: Reload all necessary datasets (its different categories)");
+				$scope.selectedDataSet = {};
+
+				$scope.currentOptionMainMenu=="datasets" ? $scope.reloadMyDataFn() : $scope.reloadMyData = true;
+
+				if($scope.currentOptionMainMenu=="models"){
+
+					if ($scope.currentModelsTab=="federations") {
+						// If the suboption of the Data option is Federations.
+						$scope.getFederatedDatasets();
+					}
+
+				}
+
+				$mdDialog.hide();
+			}
+
+			$scope.closeDocument = function(confirm) {
 
 
 
@@ -293,27 +314,13 @@ angular
 					//$scope.selectedDataSet.qbeJSONQuery = document.getElementById("documentViewerIframe").contentWindow.qbe.getQueriesCatalogue();
 					$mdDialog.hide();
 					comunicator.sendMessage("close");
-				} else {
-
+				}else if(confirm){
 					openConfirmationPanel(function(){
-						console.info("[RELOAD]: Reload all necessary datasets (its different categories)");
-						$scope.selectedDataSet = {};
-
-						$scope.currentOptionMainMenu=="datasets" ? $scope.reloadMyDataFn() : $scope.reloadMyData = true;
-
-						if($scope.currentOptionMainMenu=="models"){
-
-							if ($scope.currentModelsTab=="federations") {
-								// If the suboption of the Data option is Federations.
-								$scope.getFederatedDatasets();
-							}
-
-						}
-
-						$mdDialog.hide();
+						onClosing();
 					});
 
-
+				} else {
+						onClosing();
 
 				}
 			}

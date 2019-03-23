@@ -10,6 +10,19 @@
     height: 100%;
     background-color: $tabBackground;
     
+    md-tabs.screenShottingSheet md-tab-content{
+    	animation: none;
+    	opacity: 1;
+    	-webkit-transform: none;
+    	transform: none;
+    	-webkit-animation: none;
+    	animation: none;
+    	.screenShottingWidget {
+    		transition: none;
+    		visibility: visible;
+    	}
+    }
+
     .widgetTypeIcon {
     	padding:8px;
     	.item {
@@ -495,6 +508,18 @@
 	    		overflow-y: auto;
 	    		@include coolScrollBars($baseColor,6px);
     		}
+    		.textCell {
+    			cursor: pointer;
+    			align-items: flex-start;
+    			div {
+    				white-space: normal;
+    				line-height: 16px;
+    				em {
+    					font-weight: bold;
+    				}
+    			}
+    			
+    		}
     		
     		.discoveryListView {
 				.discoveryItem {
@@ -530,6 +555,23 @@
 			}
     	}
     	
+    }
+
+    .textContainerDialog {
+    	max-width: 40%;
+    	md-dialog-content {
+		    padding: 8px;
+		    border: 1px solid #ccc;
+		    margin: 4px;
+		    background-color: #efefef;
+		    p {
+		    	font-size: .9rem;
+				margin: 8px 0;
+				em {
+					font-weight: bold;
+				}
+		    }
+		}
     }
 
     .discoveryWidgetConfiguration {
@@ -640,6 +682,33 @@
 				}
 			}
 		}
+	}
+
+	cockpit-selection-widget {
+		.kn-chip {
+		    padding: 2px 8px;
+		    background-color: $ternaryColor;
+		    margin-right: 4px;
+		    margin-bottom: 4px;
+		    line-height: 30px;
+		    height: 30px;
+		    border-radius: 50px;
+		    font-size: $mediumFontSize;
+		    outline: none;
+		    font-weight: bold;
+		    span:first-child{
+		    	margin:0 4px;
+		    	font-weight: normal;
+		    }
+		    .md-icon-button {
+		    	padding: 0;
+		    	margin-right: 0;
+		    	min-height: 24px;
+		    	height: 24px;
+		    	width: 24px;
+		    	line-height: 24px;
+		    }
+		  }
 	}
 
 	cockpit-table-widget {
@@ -1665,7 +1734,8 @@
 
 .iconSelectorSide {
 	box-shadow: -3px 0 3px $shadowsColor;
-	md-content {
+	md-content.md-knowage-theme {
+		background-color: $tabBackground;
 		height: 635px;
 		h3 {
 			font-size: $headerFontSize;
@@ -2359,6 +2429,11 @@
             .fakeDialog {
                 outline: none;
                 cursor: pointer;
+                height: 32px;
+ 				font-size: $mediumFontSize;
+ 				line-height: 32px;
+ 				vertical-align: middle;
+ 				padding-right: 24px;
                 &:hover {
                     background-color: rgba($tableSelectedElementColor,.3);
                 }
@@ -2511,8 +2586,14 @@
 		}
 	}
 	.multiselectionDialog {
+		md-dialog-content {
+ 			height: 600px;
+		}
+		md-list {
+			height:calc(100% - 70px);
+		}
 		#vertical-container {
-			height: 50%;
+			height: 100%;
 		}
 		.selectableList {
             &[md-virtual-repeat] {
@@ -2691,6 +2772,13 @@
 		cockpit-grid {
 			overflow-y: hidden;
 		}
+		.multiselectionDialog {
+			.selectableList {
+ 				p {
+ 					max-width: none;
+ 				}
+			}
+ 		}
 		cockpit-sheet {
 			md-tabs {
 				md-tabs-wrapper {
@@ -2766,3 +2854,13 @@
 	}
 
 }
+
+@supports (-ms-ime-align: auto) {
+	.kn-cockpit {
+ 		md-tab-content {
+ 			&>div {
+ 				height: 100%;
+			}
+ 		}
+ 	}
+ }
